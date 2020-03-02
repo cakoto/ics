@@ -41,6 +41,7 @@ void reg_test() {
 }
 
 void isa_reg_display() {
+	//TODO printf()
 }
 
 uint32_t isa_reg_str2val(const char *s, bool *success) {

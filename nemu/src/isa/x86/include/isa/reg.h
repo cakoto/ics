@@ -17,9 +17,12 @@ enum { R_AL, R_CL, R_DL, R_BL, R_AH, R_CH, R_DH, R_BH };
  */
 
 typedef struct {
-	union{ //union means using same memory to save data,
-				 //we could use this nature to combine the gpr[] and rtlreg_t
+	union{ 
 	
+		/*
+			Union means using same memory to save data,
+			we could use this nature to combine the gpr[] and rtlreg_t.
+		*/
 		union {
 		  uint32_t _32;
 		  uint16_t _16;
