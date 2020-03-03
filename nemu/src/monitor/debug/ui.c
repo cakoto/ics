@@ -36,21 +36,28 @@ static int cmd_q(char *args) {
   return -1;
 }
 
+static int cmd_si(char *args);
+
+static int cmd_info(char *args);
+
 static int cmd_help(char *args);
 
 static struct {
   char *name;
   char *description;
   int (*handler) (char *);
-} cmd_table [] = {
+} cmd_table [] = {      //anonymous struct
   { "help", "Display informations about all supported commands", cmd_help },
   { "c", "Continue the execution of the program", cmd_c },
   { "q", "Exit NEMU", cmd_q },
+  { "si", "Single step execute", cmd_si },
+  { "info", "Print the procedure status", cmd_info },
 
   /* TODO: Add more commands */
 
 };
 
+/* how many command */
 #define NR_CMD (sizeof(cmd_table) / sizeof(cmd_table[0]))
 
 static int cmd_help(char *args) {
@@ -75,6 +82,8 @@ static int cmd_help(char *args) {
   }
   return 0;
 }
+
+
 
 void ui_mainloop(int is_batch_mode) {
   if (is_batch_mode) {
