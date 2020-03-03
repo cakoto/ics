@@ -7,7 +7,7 @@ const char *regsw[] = {"ax", "cx", "dx", "bx", "sp", "bp", "si", "di"};
 const char *regsb[] = {"al", "cl", "dl", "bl", "ah", "ch", "dh", "bh"};
 
 void reg_test() {
-  srand(time(0));
+  srand(time(0));               //random number
   uint32_t sample[8];
   uint32_t pc_sample = rand();
   cpu.pc = pc_sample;
@@ -42,14 +42,14 @@ void reg_test() {
 
 void isa_reg_display() {
     printf("-----** reg-display **-----");
-	printf("EAX is %x\n",cpu.eax);
-	printf("ECX is %x\n",cpu.ecx);
-	printf("EDX is %x\n",cpu.edx);
-	printf("EBX is %x\n",cpu.ebx);
-	printf("ESP is %x\n",cpu.esp);
-	printf("EBP is %x\n",cpu.ebp);
-	printf("ESI is %x\n",cpu.esi);
-	printf("EDI is %x\n",cpu.edi);
+	printf("EAX: %x  ",reg_l(R_EAX));
+	printf("ECX: %x  ",reg_l(R_ECX));
+	printf("EDX: %x  ",reg_l(R_EDX));
+	printf("EBX: %x\n",reg_l(R_EBX));
+	printf("ESP: %x  ",reg_l(R_ESP));
+	printf("EBP: %x  ",reg_l(R_EBP));
+	printf("ESI: %x  ",reg_l(R_ESI));
+	printf("EDI: %x\n",reg_l(R_EDI));
 }
 
 uint32_t isa_reg_str2val(const char *s, bool *success) {

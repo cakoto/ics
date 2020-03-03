@@ -94,6 +94,10 @@ static int cmd_si(char *args) {
         printf("Lack arguments!");
     } else {
         val = strtol(arg, NULL, 10);
+        if(val == 0) {
+            printf("Invalid command!\n");
+            return 0;
+        }
         cpu_exec(val);
         printf("-----** END **-----\n");
     }
