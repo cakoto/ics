@@ -83,16 +83,32 @@ static int cmd_help(char *args) {
   return 0;
 }
 
-static int cmd_si(char *args){
+static int cmd_si(char *args) {
     /* Single step execute */
     char *arg = strtok(NULL," ");
-    if (arg == NULL){
+    int val;
+
+    if (arg == NULL) {
         printf("Lack arguments");
     } else {
-        int val;
         val = strtol(arg, NULL, 10);
         cpu_exec(val);
         printf("-----** END **-----\n");
+    }
+    return 0;
+}
+
+static int cmd_info(char *args) {
+    char *arg = strtok(NULL, "");
+
+    if(arg == NULL) {
+        printf("Lack arguments");
+    } else if(strcmp(arg,"r") == 0) {
+        isa_reg_display(); // reg.h include in nemu.h
+    } else if(strcmp(arg,"w") == 0) {
+        //TODO WATCHPOINT
+    } else {
+        printf("Wrong arguments!");
     }
     return 0;
 }
