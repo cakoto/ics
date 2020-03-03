@@ -42,6 +42,8 @@ static int cmd_info(char *args);
 
 static int cmd_help(char *args);
 
+static int cmd_x(char *args);
+
 static struct {
   char *name;
   char *description;
@@ -52,7 +54,7 @@ static struct {
   { "q", "Exit NEMU", cmd_q },
   { "si", "Single step execute", cmd_si },
   { "info", "Print the procedure status", cmd_info },
-
+  {"x", "Scan the memory",cmd_x},
   /* TODO: Add more commands */
 
 };
@@ -89,7 +91,7 @@ static int cmd_si(char *args) {
     int val;
 
     if (arg == NULL) {
-        printf("Lack arguments");
+        printf("Lack arguments!");
     } else {
         val = strtol(arg, NULL, 10);
         cpu_exec(val);
@@ -102,15 +104,42 @@ static int cmd_info(char *args) {
     char *arg = strtok(NULL, "");
 
     if(arg == NULL) {
-        printf("Lack arguments");
+        printf("Lack arguments!");
     } else if(strcmp(arg,"r") == 0) {
-        isa_reg_display(); // reg.h include in nemu.h
+        isa_reg_display();                  // reg.h include in nemu.h
     } else if(strcmp(arg,"w") == 0) {
         //TODO WATCHPOINT
     } else {
         printf("Wrong arguments!");
     }
     return 0;
+}
+
+static int cmd_x(char *args){
+    char *arg = strtok(args, " ");
+    int val;                                //the number of consecutive 4 bytes
+    vaddr_t vaddr;                          //the start address of scanning memory
+
+    if(arg == NULL) {
+        printf("Lack arguments!");
+    } else {
+        val = strtol(arg,NULL,10);
+        arg = strtok(NULL, " ");
+        if(arg == NULL) {
+            printf("Lack arguments!");
+            return 0;
+        }
+        vaddr = strtol(arg, NULL, 16);
+
+        printf(" Address  \tData\t\n");
+
+        /* Read memory */
+        for(int i = 0; i < val; i++) {
+            uint32_t taddr = vaddr_read(vaddr + i*4, 4);        //temporal address and the vaddr_read in memory.h
+            printf("0x%08x\t", vaddr + i*4);
+            printf("0x%08x\n", taddr);
+        }
+    }
 }
 
 void ui_mainloop(int is_batch_mode) {

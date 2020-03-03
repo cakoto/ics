@@ -21,8 +21,8 @@ typedef uint8_t bool;
 
 typedef uint32_t rtlreg_t;
 
-typedef uint32_t paddr_t;
-typedef uint32_t vaddr_t;
+typedef uint32_t paddr_t; // physical address
+typedef uint32_t vaddr_t; // virtual address
 
 typedef uint16_t ioaddr_t;
 
