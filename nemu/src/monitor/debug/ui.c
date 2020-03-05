@@ -108,29 +108,29 @@ static int cmd_info(char *args) {
     char *arg = strtok(NULL, "");
 
     if(arg == NULL) {
-        printf("Lack arguments!");
+        printf("Lack arguments!\n");
     } else if(strcmp(arg,"r") == 0) {
         isa_reg_display();                  // reg.h include in nemu.h
     } else if(strcmp(arg,"w") == 0) {
         //TODO WATCHPOINT
     } else {
-        printf("Wrong arguments!");
+        printf("Wrong arguments!\n");
     }
     return 0;
 }
 
-static int cmd_x(char *args){
+static int cmd_x(char *args) {
     char *arg = strtok(args, " ");
     int val;                                //the number of consecutive 4 bytes
     vaddr_t vaddr;                          //the start address of scanning memory
 
     if(arg == NULL) {
-        printf("Lack arguments!");
+        printf("Lack arguments!\n");
     } else {
         val = strtol(arg,NULL,10);
         arg = strtok(NULL, " ");
         if(arg == NULL) {
-            printf("Lack arguments!");
+            printf("Lack arguments!\n");
             return 0;
         }
         vaddr = strtol(arg, NULL, 16);
@@ -144,6 +144,7 @@ static int cmd_x(char *args){
             printf("0x%08x\n", taddr);
         }
     }
+    return 0;
 }
 
 void ui_mainloop(int is_batch_mode) {
