@@ -48,6 +48,7 @@ static struct node {
 };
 
 #define NR_REGEX (sizeof(rules) / sizeof(rules[0]) )
+#define NR_PRIOR (sizeof(nodes) / sizeof(nodes[0]) )
 
 static regex_t re[NR_REGEX] = {};
 
@@ -188,8 +189,8 @@ bool check_parentheses(int st, int ed) {
         if(flag == 0 && i < ed) {
             return false;
         }
-        if(tokens[ed].type == ')') flag--;
     }
+    if(tokens[ed].type == ')') flag--;
     return flag == 0;
 }
 
@@ -206,15 +207,15 @@ int search_main_op(int st, int ed) {
     for (int i = st; i < ed; ++i) {
         if(tokens[i].type == '(') {     //Assume the expression is right.
             int flag = 1;
-            while(1) {
-                if(tokens[i].type == '(') flag++,i++;
-                if(tokens[i].type == ')') flag--,i++;
-                if(flag == 0) break;
+            while(flag!=0) {
+                i++;
+                if(tokens[i].type == '(') flag++;
+                if(tokens[i].type == ')') flag--;
             }
         }
         if(check_op(i)) {
-            int j = 0;
-            for (j = 0; j < 5; ++j) {
+            uint32_t j = 0;
+            for (j = 0; j < NR_PRIOR; ++j) {
                 if(nodes[j].token_type == tokens[i].type) break;
             }
             if(nodes[j].priority > op_prior)
@@ -233,7 +234,9 @@ uint32_t eval(int st, int ed, bool *success) {      // start/end position of the
          * Return the value of the number.
          */
 
-        return strtol(tokens[st].str, NULL, 10);
+        uint32_t res = strtol(tokens[st].str, NULL, 10);
+        Log("Current expressive value:%d",res);
+        return res;
     } else if(check_parentheses(st, ed) == true){
         return eval(st+1, ed-1, success);
     } else {
@@ -273,6 +276,6 @@ uint32_t expr(char *e, bool *success) {
   }
 
   /* TODO: Insert codes to evaluate the expression. */
-
+  Log("There are %d tokens.\n",nr_token);
   return eval(0, nr_token - 1, success);
 }
