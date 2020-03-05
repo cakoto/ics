@@ -31,7 +31,7 @@ static struct rule {
   {"-", '-'},           // subtraction
   {"\\(", '('},         // l_bracket
   {"\\)", ')'},         // r_bracket
-  {"[0-9]+", TK_DEC}    // decimal
+  {"[0-9]+", TK_DEC},   // decimal
 
 };
 
@@ -40,11 +40,11 @@ static struct node {
     int priority;
 } nodes[] = {
     /*quote from C Operator Precedence*/
-    { "+", 4},
-    { "-", 4},
-    { "*", 3},
-    { "/", 3},
-    { NEG, 2}
+    { '+', 4},
+    { '-', 4},
+    { '*', 3},
+    { '/', 3},
+    { NEG, 2},
 };
 
 #define NR_REGEX (sizeof(rules) / sizeof(rules[0]) )
@@ -55,7 +55,7 @@ static regex_t re[NR_REGEX] = {};
  * Therefore we compile them only once before any usage.
  */
 void init_regex() {
-  int i;
+  uint32_t i;
   char error_msg[128];
   int ret;
 
@@ -94,7 +94,7 @@ bool check_unary_operator(int pos) {
 /* Discern token */
 static bool make_token(char *e) {
   int position = 0;
-  int i;
+  uint32_t i;
   regmatch_t pmatch;
 
   nr_token = 0;
@@ -200,7 +200,8 @@ bool check_op(int pos){
              tokens[pos].type == TK_NOTYPE);
 }
 
-int search_main_op(int st, int ed, int *main_op) {
+int search_main_op(int st, int ed) {
+    int main_op = 0;
     int op_prior = -1;
     for (int i = st; i < ed; ++i) {
         if(tokens[i].type == '(') {     //Assume the expression is right.
@@ -220,6 +221,7 @@ int search_main_op(int st, int ed, int *main_op) {
                 op_prior = nodes[j].priority,main_op = i;
         }
     }
+    return main_op;
 }
 
 uint32_t eval(int st, int ed, bool *success) {      // start/end position of the expr
@@ -231,15 +233,15 @@ uint32_t eval(int st, int ed, bool *success) {      // start/end position of the
          * Return the value of the number.
          */
 
-        return strtol(tokens[st].str, NULL, 10);;
+        return strtol(tokens[st].str, NULL, 10);
     } else if(check_parentheses(st, ed) == true){
         return eval(st+1, ed-1, success);
     } else {
-        int main_op = 0;
-        search_main_op(st,ed,&main_op);
+        int main_op = search_main_op(st,ed);
+
         int op_type = tokens[main_op].type;
         int val1 = 0x3f3f3f3f;  //inf
-        int val2 = 0x3f3f3f3f;  //inf
+        int val2;  //inf
         if (op_type != NEG && op_type != DEREF)
             val1 = eval(st, main_op-1, success);
         val2 = eval(main_op+1, ed, success);
@@ -264,6 +266,7 @@ uint32_t eval(int st, int ed, bool *success) {      // start/end position of the
 
 
 uint32_t expr(char *e, bool *success) {
+  *success = true;
   if (!make_token(e)) {
     *success = false;
     return 0;
@@ -271,6 +274,5 @@ uint32_t expr(char *e, bool *success) {
 
   /* TODO: Insert codes to evaluate the expression. */
 
-
-  return 0;
+  return eval(0, nr_token - 1, success);
 }
