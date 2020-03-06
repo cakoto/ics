@@ -74,7 +74,7 @@ typedef struct token {
   char str[32];
 } Token;
 
-static Token tokens[32] __attribute__((used)) = {};
+static Token tokens[32*10] __attribute__((used)) = {}; // 32 so small that we can't finish the test
 static int nr_token __attribute__((used))  = 0;
 
 bool check_unary_operator(int pos) {
