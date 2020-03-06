@@ -44,6 +44,8 @@ static int cmd_help(char *args);
 
 static int cmd_x(char *args);
 
+static int cmd_p(char *args);
+
 static struct {
   char *name;
   char *description;
@@ -54,7 +56,8 @@ static struct {
   { "q", "Exit NEMU", cmd_q },
   { "si", "Single step execute", cmd_si },
   { "info", "Print the procedure status", cmd_info },
-  {"x", "Scan the memory",cmd_x},
+  { "x", "Scan the memory", cmd_x },
+  { "p", "Calculate the value of expression", cmd_p }
   /* TODO: Add more commands */
 
 };
@@ -91,7 +94,7 @@ static int cmd_si(char *args) {
     int val;
 
     if (arg == NULL) {
-        printf("Lack arguments!");
+        printf("Lack arguments!\n");
     } else {
         val = strtol(arg, NULL, 10);
         if(val == 0) {
@@ -145,6 +148,17 @@ static int cmd_x(char *args) {
         }
     }
     return 0;
+}
+
+static int cmd_p(char *args) {
+    bool success;
+    uint32_t val = expr(args, &success);
+    if(success) {
+        printf("DEC:%8d\tHEX:0x%08x\n",val,val);
+    } else {
+        printf("Invalid expression!\n");
+    }
+    return  0;
 }
 
 void ui_mainloop(int is_batch_mode) {

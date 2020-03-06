@@ -3,12 +3,62 @@
 #include <stdlib.h>
 #include <time.h>
 #include <assert.h>
-#include <string.h>
+#include <math.h>
 
 // this should be enough
 static char buf[65536];
+static int pos = 0; // position
+
+static inline uint32_t choose(uint32_t n){
+    srandom(time(NULL));
+    return n == 0 ? random() : random() % n;
+}
+
+void gen_num();
+void gen(char op);
+void gen_rand_op();
+
 static inline void gen_rand_expr() {
-  buf[0] = '\0';
+
+    switch (choose(3)) {
+        case 0:
+            gen_num();
+            break;
+        case 1:
+            gen('(');
+            gen_rand_expr();
+            gen(')');
+            break;
+        default:
+            gen_rand_expr();
+            gen_rand_op();
+            gen_rand_expr();
+            break;
+
+    }
+
+    if (pos >= 65536) assert(0);
+    buf[0] = '\0';
+}
+
+void gen(char op) {
+    buf[pos++] = op;
+}
+
+void gen_num() {
+    uint32_t temp = choose(0);
+    int nDigits = (int)floor(log10(temp)) + 1;
+    snprintf(buf+pos, nDigits, "%d", temp);
+    pos += nDigits;
+}
+
+void gen_rand_op() {
+    switch (choose(4)) {
+        case 0: buf[pos++] = '+';break;
+        case 1: buf[pos++] = '-';break;
+        case 2: buf[pos++] = '*';break;
+        default: buf[pos++] = '/';break; // division zero is a small probability event
+    }
 }
 
 static char code_buf[65536];
