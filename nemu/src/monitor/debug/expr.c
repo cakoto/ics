@@ -257,6 +257,8 @@ uint32_t eval(int st, int ed, bool *success) {      // start/end position of the
             case '*':
                 return val1 * val2;
             case '/':
+                if(val2 == 0) printf("Invalid Expression!\n");
+                assert(val2 != 0);
                 return val1 / val2;
             /*case DEREF:*/
                 //TODO
