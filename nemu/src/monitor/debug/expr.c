@@ -8,7 +8,8 @@
 #include <regex.h>
 
 enum {
-  TK_NOTYPE = 256, TK_EQ, TK_DEC,NEG,DEREF
+  TK_NOTYPE = 256, TK_EQ, TK_DEC, NEG, DEREF, TK_HEX, TK_UNEQ,
+  REG, TK_AND, TK_OR
 
   /* TODO: Add more token types */
 
@@ -23,15 +24,23 @@ static struct rule {
    * Pay attention to the precedence level of different rules.
    */
 
-  {" +", TK_NOTYPE},    // spaces
-  {"==", TK_EQ},        // equal
-  {"\\*", '*'},         // multiply
-  {"/", '/'},           // division
-  {"\\+", '+'},         // plus
-  {"-", '-'},           // subtraction
-  {"\\(", '('},         // l_bracket
-  {"\\)", ')'},         // r_bracket
-  {"[0-9]+", TK_DEC},   // decimal
+  //Note: Match hexadecimal first,then match decimal.
+  {" +", TK_NOTYPE},            // spaces
+  {"==", TK_EQ},                // equal
+  {"\\*", '*'},                 // multiply
+  {"/", '/'},                   // division
+  {"\\+", '+'},                 // plus
+  {"-", '-'},                   // subtraction
+  {"\\(", '('},                 // l_bracket
+  {"\\)", ')'},                 // r_bracket
+  {"0x[0-9A-Fa-f]+", TK_HEX},   // hexadecimal
+  {"[0-9]+", TK_DEC},           // decimal
+  {"!=", TK_UNEQ},              // unequal
+  {"&&", TK_AND},               // and
+  {"\\|\\|", TK_OR},            // or
+  {"\\$e[a,d,c,b]x", REG},      //Register
+  {"\\$e[s,b]p", REG},
+  {"\\$e[d,s]i", REG},
 
 };
 
@@ -40,11 +49,16 @@ static struct node {
     int priority;
 } nodes[] = {
     /*quote from C Operator Precedence*/
+    {TK_OR, 12},
+    {TK_AND, 11},
+    {TK_EQ, 7},
+    {TK_UNEQ, 7},
     { '+', 4},
     { '-', 4},
     { '*', 3},
     { '/', 3},
     { NEG, 2},
+    {DEREF, 2},
 };
 
 #define NR_REGEX (sizeof(rules) / sizeof(rules[0]) )
@@ -116,6 +130,7 @@ static bool make_token(char *e) {
          * of tokens, some extra actions should be performed.
          */
 
+
         switch (rules[i].token_type) {
             case '+':
                 tokens[nr_token++].type = rules[i].token_type;
@@ -145,16 +160,39 @@ static bool make_token(char *e) {
             case ')':
                 tokens[nr_token++].type = rules[i].token_type;
                 break;
+            case TK_AND:
+                tokens[nr_token++].type = rules[i].token_type;
+                break;
+            case TK_EQ:
+                tokens[nr_token++].type = rules[i].token_type;
+                break;
+            case TK_UNEQ:
+                tokens[nr_token++].type = rules[i].token_type;
+                break;
+            case TK_OR:
+                tokens[nr_token++].type = rules[i].token_type;
+                break;
 
             case TK_NOTYPE: break;
             case TK_DEC:
                 assert(substr_len <= 31);
-
+                //memset(tokens[nr_token].str,'\0',32);
                 strncpy(tokens[nr_token].str, substr_start, substr_len);    //copy string
                 tokens[nr_token].str[substr_len] = '\0';
                 tokens[nr_token++].type = TK_DEC;
                 break;
-
+            case TK_HEX:
+                assert(substr_len <= 31-2);
+                //memset(tokens[nr_token].str,'\0',32);
+                strncpy(tokens[nr_token].str, substr_start, substr_len);
+                tokens[nr_token].str[substr_len] = '\0';
+                tokens[nr_token++].type = TK_HEX;
+                break;
+            case REG:
+                strncpy(tokens[nr_token].str, substr_start+1, substr_len);
+                tokens[nr_token].str[substr_len] = '\0';
+                tokens[nr_token++].type = REG;
+                break;
             default:
                 printf("Wrong token!\n");
                 return false;
@@ -234,9 +272,20 @@ uint32_t eval(int st, int ed, bool *success) {      // start/end position of the
          * Return the value of the number.
          */
 
-        uint32_t res = strtol(tokens[st].str, NULL, 10);
-        Log("Current expressive value:%d",res);
-        return res;
+        if(tokens[st].type == TK_DEC){
+            uint32_t res = strtol(tokens[st].str, NULL, 10);
+            return res;
+        } else if (tokens[st].type == TK_HEX) {
+            uint32_t res = strtol(tokens[st].str, NULL, 16);
+            return res;
+        } else if (tokens[st].type == REG) {
+            uint32_t res = isa_reg_str2val(tokens[st].str,success);
+            assert(success != false);
+            return res;
+        }
+
+        //Log("Current expressive value:%d",res);
+
     } else if(check_parentheses(st, ed) == true){
         return eval(st+1, ed-1, success);
     } else {
@@ -260,13 +309,22 @@ uint32_t eval(int st, int ed, bool *success) {      // start/end position of the
                 if(val2 == 0) printf("Invalid Expression!\n");
                 assert(val2 != 0);
                 return val1 / val2;
-            /*case DEREF:*/
-                //TODO
+            case DEREF:
+                return vaddr_read(val2,4);
+            case TK_AND:
+                return val1 && val2;
+            case TK_EQ:
+                return val1 == val2;
+            case TK_UNEQ:
+                return val1 != val2;
+            case TK_OR:
+                return val1 || val2;
             case NEG:
                 return -val2;
             default: assert(0);
         }
     }
+    return 0;
 }
 
 
@@ -279,5 +337,7 @@ uint32_t expr(char *e, bool *success) {
 
   /* TODO: Insert codes to evaluate the expression. */
   Log("There are %d tokens.\n",nr_token);
-  return eval(0, nr_token - 1, success);
+  uint32_t res = eval(0, nr_token - 1, success);
+  if(*success == false) assert(0);
+  return res;
 }

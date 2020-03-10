@@ -53,5 +53,12 @@ void isa_reg_display() {
 }
 
 uint32_t isa_reg_str2val(const char *s, bool *success) {
-  return 0;
+    *success = false;
+    for (int i = 0; i < 8; i++) {
+        if(strcmp(s, regsl[i]) == 0) {
+            *success = true;
+            return reg_l(i);
+        }
+    }
+    return 0;
 }
