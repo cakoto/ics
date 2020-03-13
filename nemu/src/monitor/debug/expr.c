@@ -335,7 +335,6 @@ uint32_t expr(char *e, bool *success) {
     return 0;
   }
 
-  /* TODO: Insert codes to evaluate the expression. */
   Log("There are %d tokens.\n",nr_token);
   uint32_t res = eval(0, nr_token - 1, success);
   if(*success == false) assert(0);

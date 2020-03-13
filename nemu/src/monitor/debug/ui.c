@@ -37,14 +37,13 @@ static int cmd_q(char *args) {
 }
 
 static int cmd_si(char *args);
-
 static int cmd_info(char *args);
-
 static int cmd_help(char *args);
-
 static int cmd_x(char *args);
-
 static int cmd_p(char *args);
+static int cmd_w(char *args);
+static int cmd_d(char *args);
+
 
 static struct {
   char *name;
@@ -57,7 +56,9 @@ static struct {
   { "si", "Single step execute", cmd_si },
   { "info", "Print the procedure status", cmd_info },
   { "x", "Scan the memory", cmd_x },
-  { "p", "Calculate the value of expression", cmd_p }
+  { "p", "Calculate the value of expression", cmd_p },
+  { "w", "Add watch points", cmd_w },
+  { "d", "Delete watch points", cmd_d },
   /* TODO: Add more commands */
 
 };
@@ -115,7 +116,7 @@ static int cmd_info(char *args) {
     } else if(strcmp(arg,"r") == 0) {
         isa_reg_display();                  // reg.h include in nemu.h
     } else if(strcmp(arg,"w") == 0) {
-        //TODO WATCHPOINT
+        wp_info(3,NULL);
     } else {
         printf("Wrong arguments!\n");
     }
@@ -124,8 +125,9 @@ static int cmd_info(char *args) {
 
 static int cmd_x(char *args) {
     char *arg = strtok(args, " ");
-    int val;                                //the number of consecutive 4 bytes
-    vaddr_t vaddr;                          //the start address of scanning memory
+    int val;                    //the number of consecutive 4 bytes
+    vaddr_t vaddr;              //the start address of scanning memory
+    bool success;
 
     if(arg == NULL) {
         printf("Lack arguments!\n");
@@ -136,7 +138,7 @@ static int cmd_x(char *args) {
             printf("Lack arguments!\n");
             return 0;
         }
-        vaddr = strtol(arg, NULL, 16);
+        vaddr = expr(arg,&success);
 
         printf(" Address  \tData\t\n");
 
@@ -151,14 +153,31 @@ static int cmd_x(char *args) {
 }
 
 static int cmd_p(char *args) {
-    bool success;
+    bool success = false;
     uint32_t val = expr(args, &success);
     if(success) {
-        printf("DEC:%8d\tHEX:0x%08x\n",val,val);
+        printf("Result of %s:\tDEC:%8d\tHEX:0x%08x\n",args,val,val);
     } else {
         printf("Invalid expression!\n");
     }
     return  0;
+}
+
+static int cmd_w(char *args) {
+    bool success = false;
+    uint32_t val = expr(args, &success);
+    if (success) {
+        new_wp(args, val);
+    } else {
+        printf("Invalid expression!\n");
+    }
+    return 0;
+}
+
+static int cmd_d(char *args) {
+    int NO = strtol(args, NULL, 10);
+    free_wp(NO);
+    return 0;
 }
 
 void ui_mainloop(int is_batch_mode) {

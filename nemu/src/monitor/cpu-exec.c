@@ -61,6 +61,9 @@ void cpu_exec(uint64_t n) {
   log_clearbuf();
 
     /* TODO: check watchpoints here. */
+  if (is_wp_update()) {
+      nemu_state.state = NEMU_STOP;
+  }
 
 #endif
 
